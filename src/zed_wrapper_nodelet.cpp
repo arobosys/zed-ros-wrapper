@@ -110,7 +110,7 @@ namespace zed_wrapper {
         int rate;
         int gpu_id;
         int zed_id;
-        int depth_stabilization;
+        bool depth_stabilization;
         std::string odometry_DB;
         std::string svo_filepath;
 
@@ -184,7 +184,7 @@ namespace zed_wrapper {
          * \param frameId : the id of the reference frame of the image
          * \param t : the ros::Time to stamp the image
          */
-        sensor_msgs::ImagePtr imageToROSmsg(cv::Mat img, const std::string encodingType, std::string frameId, ros::Time t) {
+        sensor_msgs::ImagePtr imageToROSmsg(const cv::Mat& img, const std::string& encodingType, const std::string& frameId, const ros::Time& t) {
             sensor_msgs::ImagePtr ptr = boost::make_shared<sensor_msgs::Image>();
             sensor_msgs::Image& imgMessage = *ptr;
             imgMessage.header.stamp = t;
@@ -218,7 +218,7 @@ namespace zed_wrapper {
          * \param odom_frame_id : the id of the reference frame of the pose
          * \param t : the ros::Time to stamp the image
          */
-        void publishOdom(tf2::Transform base_transform, ros::Publisher &pub_odom, string odom_frame_id, ros::Time t) {
+        void publishOdom(const tf2::Transform& base_transform, ros::Publisher &pub_odom, const string& odom_frame_id, const ros::Time& t) {
             nav_msgs::Odometry odom;
             odom.header.stamp = t;
             odom.header.frame_id = odom_frame_id; // odom_frame
@@ -243,7 +243,7 @@ namespace zed_wrapper {
          * \param odometry_transform_frame_id : the id of the transformation
          * \param t : the ros::Time to stamp the image
          */
-        void publishTrackedFrame(tf2::Transform base_transform, tf2_ros::TransformBroadcaster &trans_br, string odometry_transform_frame_id, ros::Time t) {
+        void publishTrackedFrame(const tf2::Transform& base_transform, tf2_ros::TransformBroadcaster &trans_br, const string& odometry_transform_frame_id, const ros::Time& t) {
             geometry_msgs::TransformStamped transformStamped;
             transformStamped.header.stamp = ros::Time::now();
             transformStamped.header.frame_id = odometry_frame_id;
@@ -260,7 +260,7 @@ namespace zed_wrapper {
          * \param img_frame_id : the id of the reference frame of the image
          * \param t : the ros::Time to stamp the image
          */
-        void publishImage(cv::Mat img, image_transport::Publisher &pub_img, string img_frame_id, ros::Time t) {
+        void publishImage(const cv::Mat& img, image_transport::Publisher &pub_img, const string& img_frame_id, const ros::Time& t) {
             pub_img.publish(imageToROSmsg(img, sensor_msgs::image_encodings::BGR8, img_frame_id, t));
         }
 
@@ -270,7 +270,7 @@ namespace zed_wrapper {
          * \param depth_frame_id : the id of the reference frame of the depth image
          * \param t : the ros::Time to stamp the depth image
          */
-        void publishDepth(cv::Mat depth, image_transport::Publisher &pub_depth, string depth_frame_id, ros::Time t) {
+        void publishDepth(const cv::Mat& depth, image_transport::Publisher &pub_depth, const string& depth_frame_id, const ros::Time& t) {
             string encoding;
             if (openniDepthMode) {
                 depth *= 1000.0f;
@@ -318,8 +318,8 @@ namespace zed_wrapper {
          * \param pub_cam_info : the publisher object to use
          * \param t : the ros::Time to stamp the message
          */
-        void publishCamInfo(sensor_msgs::CameraInfoPtr cam_info_msg, ros::Publisher pub_cam_info, ros::Time t) {
-            static int seq = 0;
+        void publishCamInfo(const sensor_msgs::CameraInfoPtr& cam_info_msg, ros::Publisher& pub_cam_info, const ros::Time& t) {
+            static unsigned seq = 0;
             cam_info_msg->header.stamp = t;
             cam_info_msg->header.seq = seq;
             pub_cam_info.publish(cam_info_msg);
@@ -333,8 +333,8 @@ namespace zed_wrapper {
          * \param left_frame_id : the id of the reference frame of the left camera
          * \param right_frame_id : the id of the reference frame of the right camera
          */
-        void fillCamInfo(sl::Camera* zed, sensor_msgs::CameraInfoPtr left_cam_info_msg, sensor_msgs::CameraInfoPtr right_cam_info_msg,
-                string left_frame_id, string right_frame_id) {
+        void fillCamInfo(sl::Camera* zed, const sensor_msgs::CameraInfoPtr& left_cam_info_msg, const sensor_msgs::CameraInfoPtr& right_cam_info_msg,
+                         const string& left_frame_id, const string& right_frame_id) {
 
             int width = zed->getResolution().width;
             int height = zed->getResolution().height;
@@ -579,12 +579,12 @@ namespace zed_wrapper {
                         tf2::fromMsg(b2s.transform, base_to_sensor);
 
                     } catch (tf2::TransformException &ex) {
-                      ROS_WARN_THROTTLE(10.0, "The tf from '%s' to '%s' does not seem to be available, "
-                                              "will assume it as identity!",
-                                              base_frame_id.c_str(),
-                                              camera_frame_id.c_str());
-                      ROS_DEBUG("Transform error: %s", ex.what());
-                      base_to_sensor.setIdentity();
+                        ROS_WARN_THROTTLE(10.0, "The tf from '%s' to '%s' does not seem to be available, "
+                                "will assume it as identity!",
+                                          base_frame_id.c_str(),
+                                          camera_frame_id.c_str());
+                        ROS_DEBUG("Transform error: %s", ex.what());
+                        base_to_sensor.setIdentity();
                     }
 
                     // Publish the odometry if someone has subscribed to
